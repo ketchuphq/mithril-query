@@ -56,11 +56,15 @@ function isArray (thing) {
 }
 
 function isComponent (thing) {
-  return thing && (typeof thing === 'object' && thing.view) || isFunction(thing)
+  return thing && (typeof thing === 'object' && thing.view) || isFunction(thing) || isClass(thing)
 }
 
 function isFunction (thing) {
-  return typeof thing === 'function'
+  return typeof thing === 'function' && !isClass(thing)
+}
+
+function isClass (thing) {
+  return thing.prototype != null && typeof thing.prototype.view === "function"
 }
 
 function call (thing) {
@@ -130,8 +134,11 @@ function renderComponents (states, onremovers) {
     var node
     if (component.tag.view) {
       node = component.tag.view(component)
-    } if (isFunction(component.tag)) {
+    } else if (isFunction(component.tag)) {
       node = component.tag(component).view(component)
+    } else if (isClass(component.tag)) {
+      var c = new component.tag(component)
+      node = c.view(component)
     }
     if (node) {
       node.parent = component.parent
